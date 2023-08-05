@@ -1,0 +1,86 @@
+# This file can be run with the `task` utility: https://taskfile.dev/
+version: '3'
+
+vars:
+  GIT_COMMIT:
+    sh: git log -n 1 --format=%h
+  VERSION:
+    sh: go run tools/build-version.go
+  GO_SRC_DIRS:
+    sh: find . -name "*.go" -printf '%h\n' | sort -u | egrep -v '^.$' | grep -v './tools' | sd '\n' ' ' | awk -F'|' '{ print $1 }'
+  DOTENV_FILES:
+    sh: find . -name ".env*" -print | sort -u | grep -v './dist' | sd '\n' ' ' | awk -F'|' '{ print $1 }'
+
+
+tasks:
+
+  mod:
+    desc: Downloads and tidy Go modules
+    cmds:
+      - go mod download
+      - go mod tidy
+
+  build:
+    cmds:
+      - task: build-{{project.name}}
+
+  clean:
+    desc: Cleans up build artifacts
+    cmds:
+      - rm -f ./dist/{{project.name}}
+    status:
+      - test -f ./dist/{{project.name}}
+
+  lint:
+    cmds:
+      - task: lint-dotenv
+      - task: lint-{{project.name}}
+
+  update-version-file:
+    cmds:
+      - printf "package main\n\nvar Version = \"{{.VERSION}}\"" > ./cmd/{{project.name}}/version.go
+    status:
+      - test -f ./cmd/{{project.name}}/version.go
+      - grep -q "\"{{.VERSION}}\"" ./cmd/{{project.name}}/version.go
+
+  lint-dotenv:
+    desc: Lints all dotenv files
+    internal: true
+    preconditions:
+      - test -n "$(find -name '.env*')"
+      - which dotenv-linter
+    cmds:
+      - dotenv-linter {{.DOTENV_FILES}}
+
+  lint-{{project.name}}:
+    desc: Runs golangci-lint
+    internal: true
+    preconditions:
+      - test -f ./.golangci.yml
+      - which golangci-lint
+    cmds:
+      - golangci-lint run {{.GO_SRC_DIRS}}
+
+  build-{{project.name}}:
+    desc: Builds {{project.name}} binary
+    deps:
+      - task: update-version-file
+    sources:
+      - './cmd/{{project.name}}/**/*.go'
+    generates:
+      - ./dist/{{project.name}}
+    cmds:
+      - mkdir -p ./dist
+      - go build -trimpath -ldflags="-s -w -X main.Version={{.VERSION}}-{{.GIT_COMMIT}}" -o dist ./cmd/{{project.name}}
+
+  release:
+    desc: Creates a new snapshot release
+    deps:
+      - task: mod
+      - task: lint
+      - task: update-version-file
+    preconditions:
+      - test -f ./.goreleaser.yaml
+      - which goreleaser
+    cmds:
+      - goreleaser build -f ./.goreleaser.yaml --clean --snapshot
