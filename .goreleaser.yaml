@@ -15,7 +15,7 @@ archives:
         format: zip
 
 builds:
-  - main: ./cmd/svt
+  - main: ./main.go
     binary: 'svt'
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
@@ -27,16 +27,16 @@ builds:
       - darwin_arm64
       - darwin_amd64
 
-brews:
-  -
-    name: 'svt'
-    homepage: 'https://github.com/permafrost-dev/svt'
-    description: 'semantic version tools'
-    license: "MIT"
-    tap:
-      owner: 'permafrost-dev'
-      name: homebrew-svt
-      branch: main
+# brews:
+#   -
+#     name: 'svt'
+#     homepage: 'https://github.com/permafrost-dev/svt'
+#     description: 'semantic version tools'
+#     license: "MIT"
+#     tap:
+#       owner: 'permafrost-dev'
+#       name: homebrew-svt
+#       branch: main
 
 checksum:
   name_template: "checksums.txt"
