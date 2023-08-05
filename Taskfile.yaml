@@ -22,26 +22,26 @@ tasks:
 
   build:
     cmds:
-      - task: build-{{project.name}}
+      - task: build-svt
 
   clean:
     desc: Cleans up build artifacts
     cmds:
-      - rm -f ./dist/{{project.name}}
+      - rm -f ./dist/svt
     status:
-      - test -f ./dist/{{project.name}}
+      - test -f ./dist/svt
 
   lint:
     cmds:
       - task: lint-dotenv
-      - task: lint-{{project.name}}
+      - task: lint-svt
 
   update-version-file:
     cmds:
-      - printf "package main\n\nvar Version = \"{{.VERSION}}\"" > ./cmd/{{project.name}}/version.go
+      - printf "package main\n\nvar Version = \"{{.VERSION}}\"" > ./cmd/svt/version.go
     status:
-      - test -f ./cmd/{{project.name}}/version.go
-      - grep -q "\"{{.VERSION}}\"" ./cmd/{{project.name}}/version.go
+      - test -f ./cmd/svt/version.go
+      - grep -q "\"{{.VERSION}}\"" ./cmd/svt/version.go
 
   lint-dotenv:
     desc: Lints all dotenv files
@@ -52,7 +52,7 @@ tasks:
     cmds:
       - dotenv-linter {{.DOTENV_FILES}}
 
-  lint-{{project.name}}:
+  lint-svt:
     desc: Runs golangci-lint
     internal: true
     preconditions:
@@ -61,17 +61,17 @@ tasks:
     cmds:
       - golangci-lint run {{.GO_SRC_DIRS}}
 
-  build-{{project.name}}:
-    desc: Builds {{project.name}} binary
+  build-svt:
+    desc: Builds svt binary
     deps:
       - task: update-version-file
     sources:
-      - './cmd/{{project.name}}/**/*.go'
+      - './cmd/**/*.go'
     generates:
-      - ./dist/{{project.name}}
+      - ./dist/svt
     cmds:
       - mkdir -p ./dist
-      - go build -trimpath -ldflags="-s -w -X main.Version={{.VERSION}}-{{.GIT_COMMIT}}" -o dist ./cmd/{{project.name}}
+      - go build -trimpath -ldflags="-s -w -X main.Version={{.VERSION}}-{{.GIT_COMMIT}}" -o ./dist/svt ./main.go
 
   release:
     desc: Creates a new snapshot release

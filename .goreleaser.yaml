@@ -15,8 +15,8 @@ archives:
         format: zip
 
 builds:
-  - main: ./cmd/{{project.name}}
-    binary: '{{project.name}}'
+  - main: ./cmd/svt
+    binary: 'svt'
     mod_timestamp: '{{ .CommitTimestamp }}'
     flags:
       - -trimpath
@@ -29,13 +29,13 @@ builds:
 
 brews:
   -
-    name: '{{project.name}}'
-    homepage: 'https://github.com/{{project.vendor.github}}/{{project.name}}'
-    description: '{{project.description}}'
+    name: 'svt'
+    homepage: 'https://github.com/permafrost-dev/svt'
+    description: 'semantic version tools'
     license: "MIT"
     tap:
-      owner: '{{project.vendor.github}}'
-      name: homebrew-{{project.name}}
+      owner: 'permafrost-dev'
+      name: homebrew-svt
       branch: main
 
 checksum:
